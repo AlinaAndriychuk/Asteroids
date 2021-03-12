@@ -3,6 +3,7 @@ import { contain } from 'intrinsic-scale';
 import sayHello from './lib/sayHello';
 import Asteroid from './asteroid';
 import Ship from './ship';
+import Shot from './shot';
 
 class Controls {
   constructor(container) {
@@ -10,7 +11,8 @@ class Controls {
     this.width = this.canvasContainer.clientWidth;
     this.height = this.canvasContainer.clientHeight;
     this.asteroids = [];
-    this.asteroidsLimit = 5;
+    this.shots = [];
+    this.asteroidsLimit = 15;
 
     this.canvas = new PIXI.Application({
       width: this.width,
@@ -18,7 +20,7 @@ class Controls {
       autoResize: true,
       autoStart: true,
       antialias: true,
-      backgroundAlpha: 0,
+      // backgroundAlpha: 0,
     });
 
     this.container = new PIXI.Container();
@@ -27,19 +29,17 @@ class Controls {
 
   init() {
     window.addEventListener("resize", this.resize.bind(this));
-    window.addEventListener('keydown', this.moveShip.bind(this));
+    window.addEventListener('keydown', this.manageShip.bind(this));
 
     this.canvasContainer.appendChild(this.canvas.view);
     this.canvas.stage.addChild(this.container);
 
     const rect = new PIXI.Graphics();
-    rect.lineStyle(2, 0x000000)
-    rect.drawRect(0, 0, 1500, 1000);
+    rect.drawRect(0, 0, 1000, 700);
     this.container.addChild(rect);
 
     this.containerWidth = this.container.width;
     this.containerHeight = this.container.height;
-    this.resize();
 
     for (let i = 0; i < this.asteroidsLimit; i++) {
       const asteroid = new Asteroid(
@@ -47,22 +47,17 @@ class Controls {
         this.randomInteger(0, this.height),
         this.randomVector(),
         this.randomVector(),
+        this.randomInteger(0, 1),
       );
       
       this.canvas.stage.addChild(asteroid.shape);
       this.asteroids.push(asteroid);
     }
 
-    this.ship = new Ship(this.containerWidth / 2, this.containerHeight / 2);
-    this.container.addChild(this.ship.shape);
+    this.ship = new Ship(this.width / 2, this.height / 2);
+    this.canvas.stage.addChild(this.ship.shape);
     this.render();
-  }
-
-  resizeContainer() {
-    const { width, height, x, y } = contain(this.width, this.height, this.containerWidth, this.containerHeight);
-    this.container.width = width;
-    this.container.height = height;
-    this.container.position.set(x, y);
+    this.resize();
   }
 
   randomInteger(min, max) {
@@ -83,18 +78,9 @@ class Controls {
     return -1;
   }
 
-  render() {
-    window.requestAnimationFrame(this.render.bind(this));
-
-    this.asteroids.forEach( asteroid => {
-      asteroid.think(this.width, this.height);
-      asteroid.move();
-    })
-  }
-
-  moveShip(event) {
+  manageShip(event) {
     if (event.code === 'ArrowUp' && !this.ship.isMoving) {
-      this.ship.move(10, 2)
+      this.ship.move(10, 2);
     }
     if (event.code === 'ArrowLeft' && !this.ship.isRotating) {
       this.ship.rotate(10, -1)
@@ -102,6 +88,68 @@ class Controls {
     if (event.code === 'ArrowRight' && !this.ship.isRotating) {
       this.ship.rotate(10, 1)
     }
+    if (event.code === 'Space' && !this.ship.isRotating) {
+      const shot = new Shot(this.ship.shape.x, this.ship.shape.y + this.ship.addY, this.ship.vx, this.ship.vy);
+      this.canvas.stage.addChild(shot.shape);
+      this.shots.push(shot);
+
+      this.splitAsteroid(1);
+    }
+  }
+
+  splitAsteroid(index) {
+    const asteroidOne = new Asteroid(
+      this.asteroids[index].x, 
+      this.asteroids[index].y,
+      this.randomVector(),
+      this.randomVector(),
+      true,
+    );
+    const asteroidTwo = new Asteroid(
+      this.asteroids[index].x, 
+      this.asteroids[index].y,
+      this.randomVector(),
+      this.randomVector(),
+      true,
+    );
+    this.canvas.stage.removeChild(this.asteroids[index].shape);
+    this.canvas.stage.addChild(asteroidOne.shape);
+    this.canvas.stage.addChild(asteroidTwo.shape);
+    this.asteroids.splice(index, 1, asteroidOne, asteroidTwo);
+    this.resize();
+  }
+
+  render() {
+    window.requestAnimationFrame(this.render.bind(this));
+
+    this.asteroids.forEach( asteroid => {
+      asteroid.think(this.width, this.height);
+      asteroid.move();
+    });
+
+    this.shots.forEach( shot => {
+      shot.move();
+    })
+  }
+
+  resizeContainer() {
+    const { width, height, x, y } = contain(this.width, this.height, this.containerWidth, this.containerHeight);
+    this.container.width = width;
+    this.container.height = height;
+    this.container.position.set(x, y);
+
+    const proportionalContainerWidth = this.container.width / this.containerWidth;
+    const coefficient = Math.max(proportionalContainerWidth, 0.1);
+    
+    this.asteroids.forEach( asteroid => {
+      asteroid.scale(coefficient);
+    })
+
+    this.shots.forEach( shot => {
+      shot.scale(coefficient);
+    })
+
+    this.ship.scale(coefficient)
   }
 
   resize() {

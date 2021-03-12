@@ -1,17 +1,17 @@
 import * as PIXI from 'pixi.js';
 
 export default class Asteroid {
-  constructor(x, y, vx, vy) {
+  constructor(x, y, vx, vy, small) {
     this.shape = new PIXI.Graphics();
-    this.shape.lineStyle(2, 0x000000);
+    this.shape.lineStyle(2, 0xffffff);
 
     this.x = x || 0;
     this.y = y || 0;
     this.vx = vx || 0;
     this.vy = vy || 0;
+    this.small = small || false;
 
-    this.color = '#ffffff';
-    this.width = 80;
+    this.width = 100;
     this.draw();
   }
 
@@ -35,6 +35,14 @@ export default class Asteroid {
     this.y += this.vy;
   }
 
+  scale(coefficient) {
+    if(this.small) {
+      this.shape.scale.set(coefficient / 3);
+    } else {
+      this.shape.scale.set(coefficient);
+    }
+  }
+
   move() {
     this.shape.x = this.x;
     this.shape.y = this.y;
@@ -42,18 +50,18 @@ export default class Asteroid {
 
   draw() {
     this.shape.drawPolygon([
-      0, 20,
-      30, 20,
-      20, 2,
-      50, 0,
-      80, 15,
-      80, 25,
-      48, 35,
-      80, 48,
-      56, 70,
-      46, 60,
-      20, 70,
-      0, 50
+      0, 25,
+      37, 25,
+      27, 3,
+      60, 0,
+      100, 25,
+      100, 35,
+      52, 48,
+      100, 68,
+      77, 97,
+      56, 82,
+      20, 100,
+      0, 60
     ]);
     this.shape.endFill();
     this.move()

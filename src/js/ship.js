@@ -3,19 +3,26 @@ import * as PIXI from 'pixi.js';
 export default class Ship {
   constructor(x, y) {
     this.shape = new PIXI.Graphics();
-    this.shape.lineStyle(2, 0x000000);
+    this.shape.lineStyle(2, 0xffffff);
 
     this.x = x || 0;
     this.y = y || 0;
 
-    this.color = '#ffffff';
+    this.vy = -1;
+    this.vx = 0;
+    this.addY = -35;
+    this.hypotenuse = 35;
+
+    this.height = 46;
+    this.width = 28;
+
     this.draw();
   }
 
   rotate(friction, vr) {
     if(friction < 0) {
       window.cancelAnimationFrame(this.rotateRAF);
-      this.isRotating = false
+      this.isRotating = false;
       return;
     }
 
@@ -25,6 +32,15 @@ export default class Ship {
 
     this.isRotating = true;
     this.shape.angle += vr;
+
+    if (this.shape.angle < 45 && this.shape.angle > 0 || this.shape.angle > -45 && this.shape.angle < 0){
+      this.smallLeg = this.hypotenuse * Math.cos(this.shape.angle);
+      this.bigLeg = this.hypotenuse * Math.cos(90 - this.shape.angle);
+    }
+
+    this.vx = this.smallLeg / this.bigLeg;
+    this.addY = this.bigLeg;
+
     this.rotateRAF = window.requestAnimationFrame(this.rotate.bind(this, friction - 1, vr))
   }
 
@@ -42,7 +58,7 @@ export default class Ship {
       this.shape.y -= v;
     }
 
-    if (this.shape.angle !== 0) {
+    if (this.shape.angle !== 0 && this.shape.angle !== 180 && this.shape.angle !== -180) {
       if (this.shape.angle > 0 && this.shape.angle < 180 || this.shape.angle < -180){
         this.shape.x += v;
       } else {
@@ -53,16 +69,20 @@ export default class Ship {
     this.moveRAF = window.requestAnimationFrame(this.move.bind(this, friction - 1, v))
   }
 
+  scale(coefficient) {
+    this.shape.scale.set(coefficient);
+  }
+
   draw() {
     this.shape.drawPolygon([
-      0, 70,
-      20, 0,
-      40, 70,
-      36, 57,
-      4, 57
+      0, 46,
+      14, 0,
+      28, 46,
+      25, 37,
+      3, 37
     ]);
     this.shape.endFill();
-    this.shape.pivot.set(20, 35);
+    this.shape.pivot.set(this.width / 2, this.height / 2);
     this.shape.y = this.y;
     this.shape.x = this.x;
   }
