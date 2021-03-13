@@ -6,14 +6,14 @@ export default class Ship {
     this.shape.lineStyle(2, 0xffffff);
 
     this.shapePoint = new PIXI.Graphics();
-    this.shapePoint.lineStyle(2, 0xffff00);
 
     this.x = x || 0;
     this.y = y || 0;
 
+    this.power = 5;
+
     this.height = 46;
     this.width = 28;
-    this.radius = 2;
 
     this.draw();
   }
@@ -41,6 +41,19 @@ export default class Ship {
     this.rotateRAF = window.requestAnimationFrame(this.rotate.bind(this, friction - 1, vr))
   }
 
+  countDirection() {
+    const dx = this.shapePoint.getGlobalPosition().x - this.shape.x;
+    const dy = this.shapePoint.getGlobalPosition().y - this.shape.y;
+      
+      // interaction
+    const angle = Math.atan2(dy, dx);
+    const tx = this.shape.x + Math.cos(angle);
+    const ty = this.shape.y + Math.sin(angle);
+  
+    this.vx = (tx - this.shape.x) * this.power;
+    this.vy = (ty - this.shape.y) * this.power;
+  }
+
   move(friction, v, width, height) {
     if(friction < 0) {
       window.cancelAnimationFrame(this.moveRAF)
@@ -50,19 +63,9 @@ export default class Ship {
 
     this.isMoving = true;
     this.think(width, height);
-    if (this.shape.angle > 90 && this.shape.angle < 270 || this.shape.angle < -90 && this.shape.angle > -270){
-      this.shape.y += v;
-    } else {
-      this.shape.y -= v;
-    }
-
-    if (this.shape.angle !== 0 && this.shape.angle !== 180 && this.shape.angle !== -180) {
-      if (this.shape.angle > 0 && this.shape.angle < 180 || this.shape.angle < -180){
-        this.shape.x += v;
-      } else {
-        this.shape.x -= v;
-      }
-    }
+    this.countDirection();
+    this.shape.x += this.vx;
+    this.shape.y += this.vy;
   
     this.moveRAF = window.requestAnimationFrame(this.move.bind(this, friction - 1, v, width, height))
   }
@@ -101,7 +104,7 @@ export default class Ship {
     this.shape.y = this.y;
     this.shape.x = this.x;
 
-    this.shapePoint.drawCircle(0, 0, this.radius);
+    this.shapePoint.drawCircle(0, 0, 0);
     this.shapePoint.endFill();
     this.shapePoint.x = this.width / 2;
     this.shape.addChild(this.shapePoint)

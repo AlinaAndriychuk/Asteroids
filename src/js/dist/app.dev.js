@@ -37,6 +37,7 @@ function () {
     this.height = this.canvasContainer.clientHeight;
     this.asteroids = [];
     this.shots = [];
+    this.points = [];
     this.asteroidsLimit = 15;
     this.score = score;
     this.restart = restart;
@@ -58,7 +59,6 @@ function () {
       window.addEventListener('keydown', this.manageShip.bind(this));
       this.restart.addEventListener('click', this.generateGraphics.bind(this));
       this.canvasContainer.appendChild(this.canvas.view);
-      this.canvas.stage.addChild(this.container);
       var rect = new PIXI.Graphics();
       rect.drawRect(0, 0, 1000, 700);
       this.container.addChild(rect);
@@ -71,6 +71,7 @@ function () {
     key: "generateGraphics",
     value: function generateGraphics() {
       this.reset();
+      this.canvas.stage.addChild(this.container);
 
       for (var i = 0; i < this.asteroidsLimit; i++) {
         var asteroid = new _asteroid["default"](this.randomInteger(0, this.width), this.randomInteger(0, this.height), this.randomVector(), this.randomVector(), this.randomInteger(0, 1));
@@ -88,6 +89,7 @@ function () {
       this.canvas.stage.removeChildren();
       this.asteroids = [];
       this.shots = [];
+      this.points = [];
     }
   }, {
     key: "randomInteger",
@@ -101,14 +103,15 @@ function () {
     value: function randomVector() {
       var min = 0;
       var max = 1;
+      var power = 2;
       var rand = Math.round(min - 0.5 + Math.random() * (max - min + 1));
       this.rand = rand;
 
       if (rand === 1) {
-        return 1;
+        return Math.random() * power;
       }
 
-      return -1;
+      return -Math.random() * power;
     }
   }, {
     key: "manageShip",
@@ -118,15 +121,14 @@ function () {
       }
 
       if (event.code === 'ArrowLeft' && !this.ship.isRotating) {
-        this.ship.rotate(10, -2);
+        this.ship.rotate(10, -4);
       }
 
       if (event.code === 'ArrowRight' && !this.ship.isRotating) {
-        this.ship.rotate(10, 2);
+        this.ship.rotate(10, 4);
       }
 
       if (event.code === 'Space' && !this.ship.isRotating) {
-        console.log(this.ship.shapePoint.getGlobalPosition().x, this.ship.shapePoint.getGlobalPosition().y);
         var shot = new _shot["default"](this.ship.shapePoint.getGlobalPosition().x, this.ship.shapePoint.getGlobalPosition().y, this.ship.shape.x, this.ship.shape.y);
         this.canvas.stage.addChild(shot.shape);
         this.shots.push(shot);
@@ -147,6 +149,10 @@ function () {
       this.canvas.stage.removeChild(asteroid.shape);
       this.asteroids.splice(index, 1);
       this.addScore(100);
+
+      if (this.asteroids.length < this.asteroidsLimit) {
+        this.addBigAsteroid();
+      }
     }
   }, {
     key: "splitAsteroid",
@@ -157,22 +163,41 @@ function () {
       this.canvas.stage.addChild(asteroidOne.shape);
       this.canvas.stage.addChild(asteroidTwo.shape);
       this.asteroids.splice(index, 1, asteroidOne, asteroidTwo);
-
-      if (this.asteroids.length < this.asteroidsLimit) {
-        this.addBigAsteroid();
-      }
-
       this.addScore(20);
       this.resize();
     }
   }, {
     key: "addBigAsteroid",
     value: function addBigAsteroid() {
-      var width = this.asteroids[0].width;
-      var asteroid = new _asteroid["default"](-width, this.randomInteger(0, this.height), this.randomVector(), this.randomVector(), false);
+      var asteroid = new _asteroid["default"](this.randomInteger(0, this.width), this.height, this.randomVector(), this.randomVector(), false);
       this.canvas.stage.addChild(asteroid.shape);
       this.asteroids.push(asteroid);
       this.resize();
+    }
+  }, {
+    key: "boom",
+    value: function boom(x, y) {
+      var _this = this;
+
+      var number = 5;
+      var friction = 0.1;
+
+      var _loop = function _loop(i) {
+        var point = new _shot["default"](x, y, _this.randomVector() + x, _this.randomVector() + y, friction);
+
+        _this.canvas.stage.addChild(point.shape);
+
+        _this.points.push(point);
+
+        var index = _this.points.length - 1;
+        setTimeout(function () {
+          return _this.removePoint(point, index);
+        }, 600);
+      };
+
+      for (var i = 0; i < number; i++) {
+        _loop(i);
+      }
     }
   }, {
     key: "addScore",
@@ -187,35 +212,48 @@ function () {
       this.shots.splice(index, 1);
     }
   }, {
+    key: "removePoint",
+    value: function removePoint(point, index) {
+      this.canvas.stage.removeChild(point.shape);
+      this.points.splice(index, 1);
+    }
+  }, {
     key: "render",
     value: function render() {
-      var _this = this;
+      var _this2 = this;
 
       window.requestAnimationFrame(this.render.bind(this));
       this.asteroids.forEach(function (asteroid, index) {
-        asteroid.think(_this.width, _this.height);
+        asteroid.think(_this2.width, _this2.height);
         asteroid.move();
 
-        if (_this.hitTestRectangle(asteroid.shape, _this.ship.shape)) {
-          _this.defineAsteroid(asteroid, index);
+        if (_this2.hitTestRectangle(asteroid.shape, _this2.ship.shape)) {
+          _this2.defineAsteroid(asteroid, index);
 
-          _this.ship.resume(_this.width / 2, _this.height / 2);
+          _this2.ship.resume(_this2.width / 2, _this2.height / 2);
+
+          _this2.boom(asteroid.x + asteroid.width / 2, asteroid.y + asteroid.width / 2);
         }
       });
       this.shots.forEach(function (shot, index) {
-        if (shot.visible(_this.width, _this.height)) {
-          _this.removeShot(shot, index);
+        shot.move();
+
+        if (shot.visible(_this2.width, _this2.height)) {
+          _this2.removeShot(shot, index);
         }
 
-        _this.asteroids.forEach(function (asteroid, indexOfAsteroid) {
-          if (_this.hitTestRectangle(asteroid.shape, shot.shape)) {
-            _this.defineAsteroid(asteroid, indexOfAsteroid);
+        _this2.asteroids.forEach(function (asteroid, indexOfAsteroid) {
+          if (_this2.hitTestRectangle(asteroid.shape, shot.shape)) {
+            _this2.defineAsteroid(asteroid, indexOfAsteroid);
 
-            _this.removeShot(shot, index);
+            _this2.boom(asteroid.x + asteroid.width / 2, asteroid.y + asteroid.width / 2);
+
+            _this2.removeShot(shot, index);
           }
         });
-
-        shot.move();
+      });
+      this.points.forEach(function (point) {
+        point.move();
       });
     }
   }, {

@@ -12,6 +12,7 @@ class Controls {
     this.height = this.canvasContainer.clientHeight;
     this.asteroids = [];
     this.shots = [];
+    this.points = [];
     this.asteroidsLimit = 15;
 
     this.score = score;
@@ -36,7 +37,6 @@ class Controls {
     this.restart.addEventListener('click', this.generateGraphics.bind(this));
 
     this.canvasContainer.appendChild(this.canvas.view);
-    this.canvas.stage.addChild(this.container);
 
     const rect = new PIXI.Graphics();
     rect.drawRect(0, 0, 1000, 700);
@@ -52,6 +52,7 @@ class Controls {
 
   generateGraphics() {
     this.reset();
+    this.canvas.stage.addChild(this.container);
 
     for (let i = 0; i < this.asteroidsLimit; i++) {
       const asteroid = new Asteroid(
@@ -76,6 +77,7 @@ class Controls {
     this.canvas.stage.removeChildren();
     this.asteroids = [];
     this.shots = [];
+    this.points = [];
   }
 
   randomInteger(min, max) {
@@ -87,13 +89,14 @@ class Controls {
   randomVector() {
     const min = 0;
     const max = 1;
+    const power = 2;
     const rand = Math.round(min - 0.5 + Math.random() * (max - min + 1));
     this.rand = rand;
     
     if(rand === 1) {
-      return 1;
+      return Math.random() * power;
     }
-    return -1;
+    return -Math.random() * power;
   }
 
   manageShip(event) {
@@ -101,21 +104,19 @@ class Controls {
       this.ship.move(10, 2, this.width, this.height);
     }
     if (event.code === 'ArrowLeft' && !this.ship.isRotating) {
-      this.ship.rotate(10, -2)
+      this.ship.rotate(10, -4)
     }
     if (event.code === 'ArrowRight' && !this.ship.isRotating) {
-      this.ship.rotate(10, 2)
+      this.ship.rotate(10, 4)
     }
     if (event.code === 'Space' && !this.ship.isRotating) {
-      console.log(this.ship.shapePoint.getGlobalPosition().x, 
-        this.ship.shapePoint.getGlobalPosition().y
-      )
       const shot = new Shot(
         this.ship.shapePoint.getGlobalPosition().x, 
         this.ship.shapePoint.getGlobalPosition().y, 
         this.ship.shape.x,
         this.ship.shape.y
       );
+
       this.canvas.stage.addChild(shot.shape);
       this.shots.push(shot);
     }
@@ -134,6 +135,10 @@ class Controls {
     this.asteroids.splice(index, 1);
 
     this.addScore(100);
+
+    if(this.asteroids.length < this.asteroidsLimit) {
+      this.addBigAsteroid();
+    }
   }
 
   splitAsteroid(asteroid, index) {
@@ -156,19 +161,14 @@ class Controls {
     this.canvas.stage.addChild(asteroidTwo.shape);
     this.asteroids.splice(index, 1, asteroidOne, asteroidTwo);
 
-    if(this.asteroids.length < this.asteroidsLimit) {
-      this.addBigAsteroid();
-    }
-
     this.addScore(20);
     this.resize();
   }
 
   addBigAsteroid() {
-    const {width} = this.asteroids[0];
     const asteroid = new Asteroid(
-      -width,
-      this.randomInteger(0, this.height),
+      this.randomInteger(0, this.width),
+      this.height,
       this.randomVector(),
       this.randomVector(),
       false,
@@ -177,6 +177,27 @@ class Controls {
     this.canvas.stage.addChild(asteroid.shape);
     this.asteroids.push(asteroid)
     this.resize()
+  }
+
+  boom(x, y) {
+    const number = 5;
+    const friction = 0.1;
+
+    for (let i = 0; i < number; i++) {
+      const point = new Shot(
+        x,
+        y,
+        this.randomVector() + x,
+        this.randomVector() + y,
+        friction,
+      );
+
+      this.canvas.stage.addChild(point.shape);
+      this.points.push(point);
+
+      const index = this.points.length - 1;
+      setTimeout(()=> this.removePoint(point, index), 600)
+    }
   }
 
   addScore(number) {
@@ -189,6 +210,11 @@ class Controls {
     this.shots.splice(index, 1);
   }
 
+  removePoint(point, index) {
+    this.canvas.stage.removeChild(point.shape);
+    this.points.splice(index, 1);
+  }
+
   render() {
     window.requestAnimationFrame(this.render.bind(this));
 
@@ -197,11 +223,14 @@ class Controls {
       asteroid.move();
       if (this.hitTestRectangle(asteroid.shape, this.ship.shape)) {
         this.defineAsteroid(asteroid, index);
-        this.ship.resume(this.width / 2, this.height / 2)
+        this.ship.resume(this.width / 2, this.height / 2);
+        this.boom(asteroid.x + asteroid.width / 2, asteroid.y + asteroid.width / 2)
       }
     });
 
     this.shots.forEach( (shot, index) => {
+      shot.move();
+
       if(shot.visible(this.width, this.height)) {
         this.removeShot(shot, index)
       }
@@ -209,11 +238,14 @@ class Controls {
       this.asteroids.forEach( (asteroid, indexOfAsteroid) => {
         if (this.hitTestRectangle(asteroid.shape, shot.shape)) {
           this.defineAsteroid(asteroid, indexOfAsteroid);
+          this.boom(asteroid.x + asteroid.width / 2, asteroid.y + asteroid.width / 2)
           this.removeShot(shot, index)
         }
       });
+    });
 
-      shot.move();
+    this.points.forEach( point => {
+      point.move();
     });
   }
 

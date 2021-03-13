@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js';
 
 export default class Shot {
-  constructor(x, y, centerX, centerY) {
+  constructor(x, y, centerX, centerY, friction) {
     this.shape = new PIXI.Graphics();
     this.shape.beginFill(0xfffffff);
 
@@ -11,8 +11,9 @@ export default class Shot {
     this.centerX = centerX || 0;
     this.centerY = centerY || 0;
 
+    this.friction = friction || 1;
     this.power = 15;
-    this.radius = 2;
+    this.radius = 2.5;
     this.init()
   }
 
@@ -21,31 +22,17 @@ export default class Shot {
     this.countDirection();
   }
 
-  countDirection() {
+  countDirection(friction) {
     const dx = this.x - this.centerX;
     const dy = this.y - this.centerY;
-      // const dist = Math.sqrt(dx*dx + dy*dy);
       
       // interaction
     const angle = Math.atan2(dy, dx);
     const tx = this.x + Math.cos(angle);
     const ty = this.y + Math.sin(angle);
-  
-    this.vx = (tx - this.x) * this.power;
-    this.vy = (ty - this.y) * this.power;
-
-    console.log(this.vx, this.vy)
-  
-      // spring back
-      // const dx1 = -(this.x - this.originalX);
-      // const dy1 = -(this.y - this.originalY);
-  
-      // this.vx += dx1 * this.springFactor;
-      // this.vy += dy1 * this.springFactor;
-  
-      // friction
-      // this.vx *= this.friction;
-      // this.vy *= this.friction;
+    
+    this.vx = (tx - this.x) * this.power * this.friction;
+    this.vy = (ty - this.y) * this.power * this.friction;
   }
 
   scale(coefficient) {
@@ -71,7 +58,5 @@ export default class Shot {
     this.shape.endFill();
     this.shape.x = this.x;
     this.shape.y = this.y;
-
-
   }
 }

@@ -22,7 +22,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var Shot =
 /*#__PURE__*/
 function () {
-  function Shot(x, y, centerX, centerY) {
+  function Shot(x, y, centerX, centerY, friction) {
     _classCallCheck(this, Shot);
 
     this.shape = new PIXI.Graphics();
@@ -31,8 +31,9 @@ function () {
     this.y = y || 0;
     this.centerX = centerX || 0;
     this.centerY = centerY || 0;
+    this.friction = friction || 1;
     this.power = 15;
-    this.radius = 2;
+    this.radius = 2.5;
     this.init();
   }
 
@@ -44,24 +45,15 @@ function () {
     }
   }, {
     key: "countDirection",
-    value: function countDirection() {
+    value: function countDirection(friction) {
       var dx = this.x - this.centerX;
-      var dy = this.y - this.centerY; // const dist = Math.sqrt(dx*dx + dy*dy);
-      // interaction
+      var dy = this.y - this.centerY; // interaction
 
       var angle = Math.atan2(dy, dx);
       var tx = this.x + Math.cos(angle);
       var ty = this.y + Math.sin(angle);
-      this.vx = (tx - this.x) * this.power;
-      this.vy = (ty - this.y) * this.power;
-      console.log(this.vx, this.vy); // spring back
-      // const dx1 = -(this.x - this.originalX);
-      // const dy1 = -(this.y - this.originalY);
-      // this.vx += dx1 * this.springFactor;
-      // this.vy += dy1 * this.springFactor;
-      // friction
-      // this.vx *= this.friction;
-      // this.vy *= this.friction;
+      this.vx = (tx - this.x) * this.power * this.friction;
+      this.vy = (ty - this.y) * this.power * this.friction;
     }
   }, {
     key: "scale",
