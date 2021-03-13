@@ -5,11 +5,15 @@ export default class Ship {
     this.shape = new PIXI.Graphics();
     this.shape.lineStyle(2, 0xffffff);
 
+    this.shapePoint = new PIXI.Graphics();
+    this.shapePoint.lineStyle(2, 0xffff00);
+
     this.x = x || 0;
     this.y = y || 0;
 
     this.height = 46;
     this.width = 28;
+    this.radius = 2;
 
     this.draw();
   }
@@ -96,5 +100,10 @@ export default class Ship {
     this.shape.pivot.set(this.width / 2, this.height / 2);
     this.shape.y = this.y;
     this.shape.x = this.x;
+
+    this.shapePoint.drawCircle(0, 0, this.radius);
+    this.shapePoint.endFill();
+    this.shapePoint.x = this.width / 2;
+    this.shape.addChild(this.shapePoint)
   }
 }

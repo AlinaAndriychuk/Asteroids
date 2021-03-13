@@ -101,13 +101,21 @@ class Controls {
       this.ship.move(10, 2, this.width, this.height);
     }
     if (event.code === 'ArrowLeft' && !this.ship.isRotating) {
-      this.ship.rotate(10, -1)
+      this.ship.rotate(10, -2)
     }
     if (event.code === 'ArrowRight' && !this.ship.isRotating) {
-      this.ship.rotate(10, 1)
+      this.ship.rotate(10, 2)
     }
     if (event.code === 'Space' && !this.ship.isRotating) {
-      const shot = new Shot(this.ship.shape.x, this.ship.shape.y, this.ship.shape.angle);
+      console.log(this.ship.shapePoint.getGlobalPosition().x, 
+        this.ship.shapePoint.getGlobalPosition().y
+      )
+      const shot = new Shot(
+        this.ship.shapePoint.getGlobalPosition().x, 
+        this.ship.shapePoint.getGlobalPosition().y, 
+        this.ship.shape.x,
+        this.ship.shape.y
+      );
       this.canvas.stage.addChild(shot.shape);
       this.shots.push(shot);
     }
