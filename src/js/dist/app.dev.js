@@ -156,8 +156,12 @@ function () {
       this.canvas.stage.addChild(asteroidOne.shape);
       this.canvas.stage.addChild(asteroidTwo.shape);
       this.asteroids.splice(index, 1, asteroidOne, asteroidTwo);
+
+      if (this.asteroids.length < this.asteroidsLimit) {
+        this.addBigAsteroid();
+      }
+
       this.addScore(20);
-      this.addBigAsteroid();
       this.resize();
     }
   }, {
