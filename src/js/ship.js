@@ -37,7 +37,7 @@ export default class Ship {
     this.rotateRAF = window.requestAnimationFrame(this.rotate.bind(this, friction - 1, vr))
   }
 
-  move(friction, v) {
+  move(friction, v, width, height) {
     if(friction < 0) {
       window.cancelAnimationFrame(this.moveRAF)
       this.isMoving = false;
@@ -45,6 +45,7 @@ export default class Ship {
     }
 
     this.isMoving = true;
+    this.think(width, height);
     if (this.shape.angle > 90 && this.shape.angle < 270 || this.shape.angle < -90 && this.shape.angle > -270){
       this.shape.y += v;
     } else {
@@ -59,7 +60,24 @@ export default class Ship {
       }
     }
   
-    this.moveRAF = window.requestAnimationFrame(this.move.bind(this, friction - 1, v))
+    this.moveRAF = window.requestAnimationFrame(this.move.bind(this, friction - 1, v, width, height))
+  }
+
+  think(width, height) {
+    const {x} = this.shape;
+    const {y} = this.shape;
+
+    if (x > width) {
+      this.shape.x = -this.width;
+    } else if (x + this.width < 0) {
+      this.shape.x = width;
+    }
+    
+    if (y > height) {
+      this.shape.y = -this.width;
+    } else if (y + this.width < 0) {
+      this.shape.y = height;
+    }
   }
 
   scale(coefficient) {

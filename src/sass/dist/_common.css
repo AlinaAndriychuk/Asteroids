@@ -1,0 +1,23 @@
+.container {
+  overflow: hidden;
+  height: 100vh;
+}
+
+.score {
+  position: absolute;
+  width: 100px;
+  font-size: 30px;
+  text-align: right;
+  color: #ffffff;
+}
+
+.restart {
+  position: absolute;
+  top: 30px;
+  width: 150px;
+  color: #ffffff;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 24px;
+}

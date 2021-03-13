@@ -60,7 +60,7 @@ function () {
     }
   }, {
     key: "move",
-    value: function move(friction, v) {
+    value: function move(friction, v, width, height) {
       if (friction < 0) {
         window.cancelAnimationFrame(this.moveRAF);
         this.isMoving = false;
@@ -68,6 +68,7 @@ function () {
       }
 
       this.isMoving = true;
+      this.think(width, height);
 
       if (this.shape.angle > 90 && this.shape.angle < 270 || this.shape.angle < -90 && this.shape.angle > -270) {
         this.shape.y += v;
@@ -83,7 +84,25 @@ function () {
         }
       }
 
-      this.moveRAF = window.requestAnimationFrame(this.move.bind(this, friction - 1, v));
+      this.moveRAF = window.requestAnimationFrame(this.move.bind(this, friction - 1, v, width, height));
+    }
+  }, {
+    key: "think",
+    value: function think(width, height) {
+      var x = this.shape.x;
+      var y = this.shape.y;
+
+      if (x > width) {
+        this.shape.x = -this.width;
+      } else if (x + this.width < 0) {
+        this.shape.x = width;
+      }
+
+      if (y > height) {
+        this.shape.y = -this.width;
+      } else if (y + this.width < 0) {
+        this.shape.y = height;
+      }
     }
   }, {
     key: "scale",

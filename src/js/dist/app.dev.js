@@ -29,7 +29,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var Controls =
 /*#__PURE__*/
 function () {
-  function Controls(container) {
+  function Controls(container, score, restart) {
     _classCallCheck(this, Controls);
 
     this.canvasContainer = container;
@@ -38,6 +38,8 @@ function () {
     this.asteroids = [];
     this.shots = [];
     this.asteroidsLimit = 15;
+    this.score = score;
+    this.restart = restart;
     this.canvas = new PIXI.Application({
       width: this.width,
       height: this.height,
@@ -54,6 +56,7 @@ function () {
     value: function init() {
       window.addEventListener("resize", this.resize.bind(this));
       window.addEventListener('keydown', this.manageShip.bind(this));
+      this.restart.addEventListener('click', this.generateGraphics.bind(this));
       this.canvasContainer.appendChild(this.canvas.view);
       this.canvas.stage.addChild(this.container);
       var rect = new PIXI.Graphics();
@@ -61,6 +64,20 @@ function () {
       this.container.addChild(rect);
       this.containerWidth = this.container.width;
       this.containerHeight = this.container.height;
+      this.generateGraphics();
+      this.render();
+    }
+  }, {
+    key: "reset",
+    value: function reset() {
+      this.canvas.stage.removeChildren();
+      this.asteroids = [];
+      this.shots = [];
+    }
+  }, {
+    key: "generateGraphics",
+    value: function generateGraphics() {
+      this.reset();
 
       for (var i = 0; i < this.asteroidsLimit; i++) {
         var asteroid = new _asteroid["default"](this.randomInteger(0, this.width), this.randomInteger(0, this.height), this.randomVector(), this.randomVector(), this.randomInteger(0, 1));
@@ -70,7 +87,6 @@ function () {
 
       this.ship = new _ship["default"](this.width / 2, this.height / 2);
       this.canvas.stage.addChild(this.ship.shape);
-      this.render();
       this.resize();
     }
   }, {
@@ -98,7 +114,7 @@ function () {
     key: "manageShip",
     value: function manageShip(event) {
       if (event.code === 'ArrowUp' && !this.ship.isMoving) {
-        this.ship.move(10, 2);
+        this.ship.move(10, 2, this.width, this.height);
       }
 
       if (event.code === 'ArrowLeft' && !this.ship.isRotating) {
@@ -183,45 +199,32 @@ function () {
     key: "hitTestRectangle",
     value: function hitTestRectangle(rect1, rect2) {
       var r1 = rect1;
-      var r2 = rect2; // Define the variables we'll need to calculate
-
-      var hit; // hit will determine whether there's a collision
-
-      hit = false; // Find the center points of each sprite
-
+      var r2 = rect2;
+      this.hit = false;
       r1.centerX = r1.x + r1.width / 2;
       r1.centerY = r1.y + r1.height / 2;
       r2.centerX = r2.x + r2.width / 2;
-      r2.centerY = r2.y + r2.height / 2; // Find the half-widths and half-heights of each sprite
-
+      r2.centerY = r2.y + r2.height / 2;
       r1.halfWidth = r1.width / 2;
       r1.halfHeight = r1.height / 2;
       r2.halfWidth = r2.width / 2;
-      r2.halfHeight = r2.height / 2; // Calculate the distance vector between the sprites
-
+      r2.halfHeight = r2.height / 2;
       var vx = r1.centerX - r2.centerX;
-      var vy = r1.centerY - r2.centerY; // Figure out the combined half-widths and half-heights
-
+      var vy = r1.centerY - r2.centerY;
       var combinedHalfWidths = r1.halfWidth + r2.halfWidth;
-      var combinedHalfHeights = r1.halfHeight + r2.halfHeight; // Check for a collision on the x axis
+      var combinedHalfHeights = r1.halfHeight + r2.halfHeight;
 
       if (Math.abs(vx) < combinedHalfWidths) {
-        // A collision might be occurring. Check for a collision on the y axis
         if (Math.abs(vy) < combinedHalfHeights) {
-          // There's definitely a collision happening
-          hit = true;
-          console.log(this.shots, hit);
+          this.hit = true;
         } else {
-          // There's no collision on the y axis
-          hit = false;
+          this.hit = false;
         }
       } else {
-        // There's no collision on the x axis
-        hit = false;
-      } // `hit` will be either `true` or `false`
+        this.hit = false;
+      }
 
-
-      return hit;
+      return this.hit;
     }
   }, {
     key: "resizeContainer",
@@ -259,5 +262,7 @@ function () {
 }();
 
 var container = document.querySelector('.js-container');
-var controls = new Controls(container);
+var score = document.querySelector('.js-score');
+var restart = document.querySelector('.js-restart');
+var controls = new Controls(container, score, restart);
 (0, _sayHello["default"])();
