@@ -20,7 +20,6 @@ class Controls {
       autoResize: true,
       autoStart: true,
       antialias: true,
-      // backgroundAlpha: 0,
     });
 
     this.container = new PIXI.Container();
@@ -89,30 +88,41 @@ class Controls {
       this.ship.rotate(10, 1)
     }
     if (event.code === 'Space' && !this.ship.isRotating) {
-      const shot = new Shot(this.ship.shape.x, this.ship.shape.y + this.ship.addY, this.ship.vx, this.ship.vy);
+      const shot = new Shot(this.ship.shape.x, this.ship.shape.y, this.ship.shape.angle);
       this.canvas.stage.addChild(shot.shape);
       this.shots.push(shot);
-
-      this.splitAsteroid(1);
     }
   }
 
-  splitAsteroid(index) {
+  defineAsteroid(asteroid, index) {
+    if(asteroid.small) {
+      this.removeAsteroid(asteroid, index)
+    } else {
+      this.splitAsteroid(asteroid, index)
+    }
+  }
+
+  removeAsteroid(asteroid, index) {
+    this.canvas.stage.removeChild(asteroid.shape);
+    this.asteroids.splice(index, 1);
+  }
+
+  splitAsteroid(asteroid, index) {
     const asteroidOne = new Asteroid(
-      this.asteroids[index].x, 
-      this.asteroids[index].y,
+      asteroid.x, 
+      asteroid.y,
       this.randomVector(),
       this.randomVector(),
       true,
     );
     const asteroidTwo = new Asteroid(
-      this.asteroids[index].x, 
-      this.asteroids[index].y,
+      asteroid.x, 
+      asteroid.y,
       this.randomVector(),
       this.randomVector(),
       true,
     );
-    this.canvas.stage.removeChild(this.asteroids[index].shape);
+    this.canvas.stage.removeChild(asteroid.shape);
     this.canvas.stage.addChild(asteroidOne.shape);
     this.canvas.stage.addChild(asteroidTwo.shape);
     this.asteroids.splice(index, 1, asteroidOne, asteroidTwo);
@@ -122,15 +132,89 @@ class Controls {
   render() {
     window.requestAnimationFrame(this.render.bind(this));
 
-    this.asteroids.forEach( asteroid => {
+    this.asteroids.forEach( (asteroid, index) => {
       asteroid.think(this.width, this.height);
       asteroid.move();
+      if (this.hitTestRectangle(asteroid.shape, this.ship.shape)) {
+        this.defineAsteroid(asteroid, index);
+        this.ship.resume(this.width / 2, this.height / 2)
+      }
     });
 
-    this.shots.forEach( shot => {
+    this.shots.forEach( (shot, index) => {
+      if(shot.visible(this.width, this.height)) {
+        this.removeShot(shot, index)
+      }
+
+      this.asteroids.forEach( (asteroid, indexOfAsteroid) => {
+        if (this.hitTestRectangle(asteroid.shape, shot.shape)) {
+          this.defineAsteroid(asteroid, indexOfAsteroid);
+          this.removeShot(shot, index)
+        }
+      });
+
       shot.move();
-    })
+    });
   }
+
+  removeShot(shot, index) {
+    this.canvas.stage.removeChild(shot.shape);
+    this.shots.splice(index, 1);
+  }
+
+  hitTestRectangle(rect1, rect2) {
+
+    const r1 = rect1;
+    const r2 = rect2;
+
+    // Define the variables we'll need to calculate
+    let hit;
+  
+    // hit will determine whether there's a collision
+    hit = false;
+  
+    // Find the center points of each sprite
+    r1.centerX = r1.x + r1.width / 2;
+    r1.centerY = r1.y + r1.height / 2;
+    r2.centerX = r2.x + r2.width / 2;
+    r2.centerY = r2.y + r2.height / 2;
+  
+    // Find the half-widths and half-heights of each sprite
+    r1.halfWidth = r1.width / 2;
+    r1.halfHeight = r1.height / 2;
+    r2.halfWidth = r2.width / 2;
+    r2.halfHeight = r2.height / 2;
+  
+    // Calculate the distance vector between the sprites
+    const vx = r1.centerX - r2.centerX;
+    const vy = r1.centerY - r2.centerY;
+  
+    // Figure out the combined half-widths and half-heights
+    const combinedHalfWidths = r1.halfWidth + r2.halfWidth;
+    const combinedHalfHeights = r1.halfHeight + r2.halfHeight;
+  
+    // Check for a collision on the x axis
+    if (Math.abs(vx) < combinedHalfWidths) {
+  
+      // A collision might be occurring. Check for a collision on the y axis
+      if (Math.abs(vy) < combinedHalfHeights) {
+  
+        // There's definitely a collision happening
+        hit = true;
+        console.log(this.shots, hit)
+      } else {
+  
+        // There's no collision on the y axis
+        hit = false;
+      }
+    } else {
+  
+      // There's no collision on the x axis
+      hit = false;
+    }
+    // `hit` will be either `true` or `false`
+    return hit;
+  };
 
   resizeContainer() {
     const { width, height, x, y } = contain(this.width, this.height, this.containerWidth, this.containerHeight);

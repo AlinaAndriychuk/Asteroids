@@ -16,8 +16,8 @@ export default class Asteroid {
   }
 
   think(width, height) {
-    const {x} = this.shape.getGlobalPosition();
-    const {y} = this.shape.getGlobalPosition();
+    const {x} = this;
+    const {y} = this;
 
     if (x > width) {
       this.x = -this.width;

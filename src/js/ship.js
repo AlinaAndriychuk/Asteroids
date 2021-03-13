@@ -8,15 +8,16 @@ export default class Ship {
     this.x = x || 0;
     this.y = y || 0;
 
-    this.vy = -1;
-    this.vx = 0;
-    this.addY = -35;
-    this.hypotenuse = 35;
-
     this.height = 46;
     this.width = 28;
 
     this.draw();
+  }
+
+  resume(x, y) {
+    this.shape.x = x;
+    this.shape.y = y;
+    this.shape.angle = 0;
   }
 
   rotate(friction, vr) {
@@ -32,14 +33,6 @@ export default class Ship {
 
     this.isRotating = true;
     this.shape.angle += vr;
-
-    if (this.shape.angle < 45 && this.shape.angle > 0 || this.shape.angle > -45 && this.shape.angle < 0){
-      this.smallLeg = this.hypotenuse * Math.cos(this.shape.angle);
-      this.bigLeg = this.hypotenuse * Math.cos(90 - this.shape.angle);
-    }
-
-    this.vx = this.smallLeg / this.bigLeg;
-    this.addY = this.bigLeg;
 
     this.rotateRAF = window.requestAnimationFrame(this.rotate.bind(this, friction - 1, vr))
   }
