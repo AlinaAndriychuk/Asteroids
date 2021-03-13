@@ -224,7 +224,7 @@ class Controls {
       if (this.hitTestRectangle(asteroid.shape, this.ship.shape)) {
         this.defineAsteroid(asteroid, index);
         this.ship.resume(this.width / 2, this.height / 2);
-        this.boom(asteroid.x + asteroid.width / 2, asteroid.y + asteroid.width / 2)
+        this.boom(asteroid.x, asteroid.y)
       }
     });
 
@@ -238,7 +238,7 @@ class Controls {
       this.asteroids.forEach( (asteroid, indexOfAsteroid) => {
         if (this.hitTestRectangle(asteroid.shape, shot.shape)) {
           this.defineAsteroid(asteroid, indexOfAsteroid);
-          this.boom(asteroid.x + asteroid.width / 2, asteroid.y + asteroid.width / 2)
+          this.boom(asteroid.x, asteroid.y)
           this.removeShot(shot, index)
         }
       });

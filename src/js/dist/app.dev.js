@@ -232,7 +232,7 @@ function () {
 
           _this2.ship.resume(_this2.width / 2, _this2.height / 2);
 
-          _this2.boom(asteroid.x + asteroid.width / 2, asteroid.y + asteroid.width / 2);
+          _this2.boom(asteroid.x, asteroid.y);
         }
       });
       this.shots.forEach(function (shot, index) {
@@ -246,7 +246,7 @@ function () {
           if (_this2.hitTestRectangle(asteroid.shape, shot.shape)) {
             _this2.defineAsteroid(asteroid, indexOfAsteroid);
 
-            _this2.boom(asteroid.x + asteroid.width / 2, asteroid.y + asteroid.width / 2);
+            _this2.boom(asteroid.x, asteroid.y);
 
             _this2.removeShot(shot, index);
           }
