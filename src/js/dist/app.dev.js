@@ -68,13 +68,6 @@ function () {
       this.render();
     }
   }, {
-    key: "reset",
-    value: function reset() {
-      this.canvas.stage.removeChildren();
-      this.asteroids = [];
-      this.shots = [];
-    }
-  }, {
     key: "generateGraphics",
     value: function generateGraphics() {
       this.reset();
@@ -88,6 +81,13 @@ function () {
       this.ship = new _ship["default"](this.width / 2, this.height / 2);
       this.canvas.stage.addChild(this.ship.shape);
       this.resize();
+    }
+  }, {
+    key: "reset",
+    value: function reset() {
+      this.canvas.stage.removeChildren();
+      this.asteroids = [];
+      this.shots = [];
     }
   }, {
     key: "randomInteger",
@@ -145,6 +145,7 @@ function () {
     value: function removeAsteroid(asteroid, index) {
       this.canvas.stage.removeChild(asteroid.shape);
       this.asteroids.splice(index, 1);
+      this.addScore(100);
     }
   }, {
     key: "splitAsteroid",
@@ -155,7 +156,30 @@ function () {
       this.canvas.stage.addChild(asteroidOne.shape);
       this.canvas.stage.addChild(asteroidTwo.shape);
       this.asteroids.splice(index, 1, asteroidOne, asteroidTwo);
+      this.addScore(20);
+      this.addBigAsteroid();
       this.resize();
+    }
+  }, {
+    key: "addBigAsteroid",
+    value: function addBigAsteroid() {
+      var width = this.asteroids[0].width;
+      var asteroid = new _asteroid["default"](-width, this.randomInteger(0, this.height), this.randomVector(), this.randomVector(), false);
+      this.canvas.stage.addChild(asteroid.shape);
+      this.asteroids.push(asteroid);
+      this.resize();
+    }
+  }, {
+    key: "addScore",
+    value: function addScore(number) {
+      var current = +this.score.innerText;
+      this.score.innerText = current + number;
+    }
+  }, {
+    key: "removeShot",
+    value: function removeShot(shot, index) {
+      this.canvas.stage.removeChild(shot.shape);
+      this.shots.splice(index, 1);
     }
   }, {
     key: "render",
@@ -188,12 +212,6 @@ function () {
 
         shot.move();
       });
-    }
-  }, {
-    key: "removeShot",
-    value: function removeShot(shot, index) {
-      this.canvas.stage.removeChild(shot.shape);
-      this.shots.splice(index, 1);
     }
   }, {
     key: "hitTestRectangle",

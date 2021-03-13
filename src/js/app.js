@@ -50,12 +50,6 @@ class Controls {
     this.render();
   }
 
-  reset() {
-    this.canvas.stage.removeChildren();
-    this.asteroids = [];
-    this.shots = [];
-  }
-
   generateGraphics() {
     this.reset();
 
@@ -76,6 +70,12 @@ class Controls {
     this.canvas.stage.addChild(this.ship.shape);
 
     this.resize();
+  }
+
+  reset() {
+    this.canvas.stage.removeChildren();
+    this.asteroids = [];
+    this.shots = [];
   }
 
   randomInteger(min, max) {
@@ -124,6 +124,8 @@ class Controls {
   removeAsteroid(asteroid, index) {
     this.canvas.stage.removeChild(asteroid.shape);
     this.asteroids.splice(index, 1);
+
+    this.addScore(100);
   }
 
   splitAsteroid(asteroid, index) {
@@ -145,7 +147,35 @@ class Controls {
     this.canvas.stage.addChild(asteroidOne.shape);
     this.canvas.stage.addChild(asteroidTwo.shape);
     this.asteroids.splice(index, 1, asteroidOne, asteroidTwo);
+
+    this.addScore(20);
+    this.addBigAsteroid();
     this.resize();
+  }
+
+  addBigAsteroid() {
+    const {width} = this.asteroids[0];
+    const asteroid = new Asteroid(
+      -width,
+      this.randomInteger(0, this.height),
+      this.randomVector(),
+      this.randomVector(),
+      false,
+    );
+
+    this.canvas.stage.addChild(asteroid.shape);
+    this.asteroids.push(asteroid)
+    this.resize()
+  }
+
+  addScore(number) {
+    const current = +this.score.innerText;
+    this.score.innerText = current + number;
+  }
+
+  removeShot(shot, index) {
+    this.canvas.stage.removeChild(shot.shape);
+    this.shots.splice(index, 1);
   }
 
   render() {
@@ -174,11 +204,6 @@ class Controls {
 
       shot.move();
     });
-  }
-
-  removeShot(shot, index) {
-    this.canvas.stage.removeChild(shot.shape);
-    this.shots.splice(index, 1);
   }
 
   hitTestRectangle(rect1, rect2) {
