@@ -5,6 +5,11 @@ export default class Ship {
     this.shape = new PIXI.Graphics();
     this.shape.lineStyle(2, 0xffffff);
 
+    this.fire = new PIXI.Graphics();
+    this.fire.lineStyle(1.5, 0xffffff);
+
+    this.hideFire = true;
+
     this.shapePoint = new PIXI.Graphics();
 
     this.x = x || 0;
@@ -12,16 +17,10 @@ export default class Ship {
 
     this.power = 5;
 
-    this.height = 46;
+    this.height = 52;
     this.width = 28;
 
     this.draw();
-  }
-
-  resume(x, y) {
-    this.shape.x = x;
-    this.shape.y = y;
-    this.shape.angle = 0;
   }
 
   rotate(friction, vr) {
@@ -58,16 +57,28 @@ export default class Ship {
     if(friction < 0) {
       window.cancelAnimationFrame(this.moveRAF)
       this.isMoving = false;
+      this.switchFire(true)
       return;
     }
 
     this.isMoving = true;
+    this.switchFire();
     this.think(width, height);
     this.countDirection();
     this.shape.x += this.vx;
     this.shape.y += this.vy;
   
     this.moveRAF = window.requestAnimationFrame(this.move.bind(this, friction - 1, v, width, height))
+  }
+
+  switchFire(hide) {
+    const value = hide || !this.hideFire;
+
+    if(value) {
+      this.shape.removeChild(this.fire)
+    } else {
+      this.shape.addChild(this.fire)
+    }
   }
 
   think(width, height) {
@@ -103,6 +114,13 @@ export default class Ship {
     this.shape.pivot.set(this.width / 2, this.height / 2);
     this.shape.y = this.y;
     this.shape.x = this.x;
+
+    this.fire.drawPolygon([
+      20, 37,
+      14, 52,
+      8, 37
+    ]);
+    this.fire.endFill();
 
     this.shapePoint.drawCircle(0, 0, 0);
     this.shapePoint.endFill();

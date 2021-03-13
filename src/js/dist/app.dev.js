@@ -14,6 +14,8 @@ var _ship = _interopRequireDefault(require("./ship"));
 
 var _shot = _interopRequireDefault(require("./shot"));
 
+var _stick = _interopRequireDefault(require("./stick"));
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function _getRequireWildcardCache() { return cache; }; return cache; }
@@ -29,7 +31,11 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var Controls =
 /*#__PURE__*/
 function () {
-  function Controls(container, score, restart) {
+  function Controls(_ref) {
+    var container = _ref.container,
+        score = _ref.score,
+        restart = _ref.restart;
+
     _classCallCheck(this, Controls);
 
     this.canvasContainer = container;
@@ -38,7 +44,11 @@ function () {
     this.asteroids = [];
     this.shots = [];
     this.points = [];
-    this.asteroidsLimit = 15;
+    this.sticks = [];
+    this.asteroidsLimit = 10;
+    this.hitPoints = [];
+    this.numberOfhitPoints = 3;
+    this.scoreNumber = 0;
     this.score = score;
     this.restart = restart;
     this.canvas = new PIXI.Application({
@@ -74,14 +84,51 @@ function () {
       this.canvas.stage.addChild(this.container);
 
       for (var i = 0; i < this.asteroidsLimit; i++) {
-        var asteroid = new _asteroid["default"](this.randomInteger(0, this.width), this.randomInteger(0, this.height), this.randomVector(), this.randomVector(), this.randomInteger(0, 1));
+        var asteroid = new _asteroid["default"](this.randomInteger(0, this.width), this.randomInteger(0, this.height), this.randomVector(), this.randomVector(), this.randomInteger(1, 3));
         this.canvas.stage.addChild(asteroid.shape);
         this.asteroids.push(asteroid);
       }
 
       this.ship = new _ship["default"](this.width / 2, this.height / 2);
       this.canvas.stage.addChild(this.ship.shape);
+      this.setHitPoints();
       this.resize();
+    }
+  }, {
+    key: "setHitPoints",
+    value: function setHitPoints() {
+      var interval = 20;
+      var left = 180;
+
+      for (var i = 0; i < this.numberOfhitPoints; i++) {
+        var hitPoint = new _ship["default"](left + i * (this.ship.width + interval), this.ship.height);
+        this.canvas.stage.addChild(hitPoint.shape);
+        this.hitPoints.push(hitPoint);
+      }
+    }
+  }, {
+    key: "subtractHitPoint",
+    value: function subtractHitPoint() {
+      var _this = this;
+
+      this.canvas.stage.removeChild(this.hitPoints[this.hitPoints.length - 1].shape);
+      this.hitPoints.pop();
+      this.ship = null;
+      this.createShip = true;
+
+      if (this.hitPoints.length === 0) {
+        this.score.classList.add('full');
+        this.restart.classList.add('full');
+        this.createShip = false;
+      } else {
+        setTimeout(function () {
+          if (_this.createShip) {
+            _this.ship = new _ship["default"](_this.width / 2, _this.height / 2);
+
+            _this.canvas.stage.addChild(_this.ship.shape);
+          }
+        }, 1000);
+      }
     }
   }, {
     key: "reset",
@@ -90,6 +137,12 @@ function () {
       this.asteroids = [];
       this.shots = [];
       this.points = [];
+      this.stick = [];
+      this.hitPoints = [];
+      this.scoreNumber = 0;
+      this.addScore(0);
+      this.score.classList.remove('full');
+      this.restart.classList.remove('full');
     }
   }, {
     key: "randomInteger",
@@ -116,6 +169,8 @@ function () {
   }, {
     key: "manageShip",
     value: function manageShip(event) {
+      if (!this.ship) return;
+
       if (event.code === 'ArrowUp' && !this.ship.isMoving) {
         this.ship.move(10, 2, this.width, this.height);
       }
@@ -135,12 +190,26 @@ function () {
       }
     }
   }, {
+    key: "shipCollision",
+    value: function shipCollision(asteroid, index) {
+      this.defineAsteroid(asteroid, index);
+      this.brokeShip(this.ship.shape.x, this.ship.shape.y);
+      this.boom(asteroid.x, asteroid.y);
+      this.canvas.stage.removeChild(this.ship.shape);
+      this.subtractHitPoint();
+    }
+  }, {
     key: "defineAsteroid",
     value: function defineAsteroid(asteroid, index) {
-      if (asteroid.small) {
+      if (asteroid.size === 3) {
         this.removeAsteroid(asteroid, index);
+        this.addScore(100);
+      } else if (asteroid.size === 2) {
+        this.splitAsteroid(asteroid, index);
+        this.addScore(50);
       } else {
         this.splitAsteroid(asteroid, index);
+        this.addScore(20);
       }
     }
   }, {
@@ -148,7 +217,6 @@ function () {
     value: function removeAsteroid(asteroid, index) {
       this.canvas.stage.removeChild(asteroid.shape);
       this.asteroids.splice(index, 1);
-      this.addScore(100);
 
       if (this.asteroids.length < this.asteroidsLimit) {
         this.addBigAsteroid();
@@ -157,41 +225,39 @@ function () {
   }, {
     key: "splitAsteroid",
     value: function splitAsteroid(asteroid, index) {
-      var asteroidOne = new _asteroid["default"](asteroid.x, asteroid.y, this.randomVector(), this.randomVector(), true);
-      var asteroidTwo = new _asteroid["default"](asteroid.x, asteroid.y, this.randomVector(), this.randomVector(), true);
+      var asteroidOne = new _asteroid["default"](asteroid.x, asteroid.y, this.randomVector(), this.randomVector(), asteroid.size + 1);
+      var asteroidTwo = new _asteroid["default"](asteroid.x, asteroid.y, this.randomVector(), this.randomVector(), asteroid.size + 1);
       this.canvas.stage.removeChild(asteroid.shape);
       this.canvas.stage.addChild(asteroidOne.shape);
       this.canvas.stage.addChild(asteroidTwo.shape);
       this.asteroids.splice(index, 1, asteroidOne, asteroidTwo);
-      this.addScore(20);
       this.resize();
     }
   }, {
     key: "addBigAsteroid",
     value: function addBigAsteroid() {
-      var asteroid = new _asteroid["default"](this.randomInteger(0, this.width), this.height, this.randomVector(), this.randomVector(), false);
+      var asteroid = new _asteroid["default"](this.randomInteger(0, this.width), this.height, this.randomVector(), this.randomVector(), 1);
       this.canvas.stage.addChild(asteroid.shape);
       this.asteroids.push(asteroid);
       this.resize();
     }
   }, {
-    key: "boom",
-    value: function boom(x, y) {
-      var _this = this;
+    key: "brokeShip",
+    value: function brokeShip(x, y) {
+      var _this2 = this;
 
-      var number = 5;
-      var friction = 0.1;
+      var number = 3;
 
       var _loop = function _loop(i) {
-        var point = new _shot["default"](x, y, _this.randomVector() + x, _this.randomVector() + y, friction);
+        var stick = new _stick["default"](x, y, _this2.randomVector() + x, _this2.randomVector() + y, _this2.randomInteger(0, 360));
 
-        _this.canvas.stage.addChild(point.shape);
+        _this2.canvas.stage.addChild(stick.shape);
 
-        _this.points.push(point);
+        _this2.sticks.push(stick);
 
-        var index = _this.points.length - 1;
+        var index = _this2.sticks.length - 1;
         setTimeout(function () {
-          return _this.removePoint(point, index);
+          return _this2.removePoint(stick, index);
         }, 600);
       };
 
@@ -200,10 +266,35 @@ function () {
       }
     }
   }, {
+    key: "boom",
+    value: function boom(x, y) {
+      var _this3 = this;
+
+      var number = 5;
+      var friction = 0.1;
+
+      var _loop2 = function _loop2(i) {
+        var point = new _shot["default"](x, y, _this3.randomVector() + x, _this3.randomVector() + y, friction);
+
+        _this3.canvas.stage.addChild(point.shape);
+
+        _this3.points.push(point);
+
+        var index = _this3.points.length - 1;
+        setTimeout(function () {
+          return _this3.removePoint(point, index);
+        }, 600);
+      };
+
+      for (var i = 0; i < number; i++) {
+        _loop2(i);
+      }
+    }
+  }, {
     key: "addScore",
     value: function addScore(number) {
-      var current = +this.score.innerText;
-      this.score.innerText = current + number;
+      this.scoreNumber += number;
+      this.score.innerText = this.scoreNumber;
     }
   }, {
     key: "removeShot",
@@ -220,40 +311,39 @@ function () {
   }, {
     key: "render",
     value: function render() {
-      var _this2 = this;
+      var _this4 = this;
 
       window.requestAnimationFrame(this.render.bind(this));
       this.asteroids.forEach(function (asteroid, index) {
-        asteroid.think(_this2.width, _this2.height);
+        asteroid.think(_this4.width, _this4.height);
         asteroid.move();
 
-        if (_this2.hitTestRectangle(asteroid.shape, _this2.ship.shape)) {
-          _this2.defineAsteroid(asteroid, index);
-
-          _this2.ship.resume(_this2.width / 2, _this2.height / 2);
-
-          _this2.boom(asteroid.x, asteroid.y);
+        if (_this4.ship && _this4.hitTestRectangle(asteroid.shape, _this4.ship.shape)) {
+          _this4.shipCollision(asteroid, index);
         }
       });
       this.shots.forEach(function (shot, index) {
         shot.move();
 
-        if (shot.visible(_this2.width, _this2.height)) {
-          _this2.removeShot(shot, index);
+        if (shot.visible(_this4.width, _this4.height)) {
+          _this4.removeShot(shot, index);
         }
 
-        _this2.asteroids.forEach(function (asteroid, indexOfAsteroid) {
-          if (_this2.hitTestRectangle(asteroid.shape, shot.shape)) {
-            _this2.defineAsteroid(asteroid, indexOfAsteroid);
+        _this4.asteroids.forEach(function (asteroid, indexOfAsteroid) {
+          if (_this4.hitTestRectangle(asteroid.shape, shot.shape)) {
+            _this4.defineAsteroid(asteroid, indexOfAsteroid);
 
-            _this2.boom(asteroid.x, asteroid.y);
+            _this4.boom(asteroid.x, asteroid.y);
 
-            _this2.removeShot(shot, index);
+            _this4.removeShot(shot, index);
           }
         });
       });
       this.points.forEach(function (point) {
         point.move();
+      });
+      this.sticks.forEach(function (stick) {
+        stick.move();
       });
     }
   }, {
@@ -325,5 +415,9 @@ function () {
 var container = document.querySelector('.js-container');
 var score = document.querySelector('.js-score');
 var restart = document.querySelector('.js-restart');
-var controls = new Controls(container, score, restart);
+var controls = new Controls({
+  container: container,
+  score: score,
+  restart: restart
+});
 (0, _sayHello["default"])();

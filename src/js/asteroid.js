@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js';
 
 export default class Asteroid {
-  constructor(x, y, vx, vy, small) {
+  constructor(x, y, vx, vy, size) {
     this.shape = new PIXI.Graphics();
     this.shape.lineStyle(2, 0xffffff);
 
@@ -9,7 +9,7 @@ export default class Asteroid {
     this.y = y || 0;
     this.vx = vx || 0;
     this.vy = vy || 0;
-    this.small = small || false;
+    this.size = size;
 
     this.width = 100;
     this.draw();
@@ -36,11 +36,7 @@ export default class Asteroid {
   }
 
   scale(coefficient) {
-    if(this.small) {
-      this.shape.scale.set(coefficient / 3);
-    } else {
-      this.shape.scale.set(coefficient);
-    }
+    this.shape.scale.set(coefficient / this.size);
   }
 
   move() {

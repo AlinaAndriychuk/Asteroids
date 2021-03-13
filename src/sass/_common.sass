@@ -19,8 +19,24 @@
 
 .restart
   position: absolute
-  top: 50px
+  box-sizing: border-box
+  margin: 50px auto
   width: 150px
+  padding: 0 20px
 
   font-size: 24px
   cursor: pointer
+
+.full
+  width: fit-content
+  top: 30%
+  left: 50%
+  margin: 100px auto
+  
+  font-size: 40px
+  transform: translateX(-50%)
+  
+  &:first-child
+    font-size: 78px
+    margin-top: 0
+    padding: 0

@@ -22,7 +22,7 @@ export default class Shot {
     this.countDirection();
   }
 
-  countDirection(friction) {
+  countDirection() {
     const dx = this.x - this.centerX;
     const dy = this.y - this.centerY;
       

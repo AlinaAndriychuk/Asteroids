@@ -22,7 +22,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var Asteroid =
 /*#__PURE__*/
 function () {
-  function Asteroid(x, y, vx, vy, small) {
+  function Asteroid(x, y, vx, vy, size) {
     _classCallCheck(this, Asteroid);
 
     this.shape = new PIXI.Graphics();
@@ -31,7 +31,7 @@ function () {
     this.y = y || 0;
     this.vx = vx || 0;
     this.vy = vy || 0;
-    this.small = small || false;
+    this.size = size;
     this.width = 100;
     this.draw();
   }
@@ -60,11 +60,7 @@ function () {
   }, {
     key: "scale",
     value: function scale(coefficient) {
-      if (this.small) {
-        this.shape.scale.set(coefficient / 3);
-      } else {
-        this.shape.scale.set(coefficient);
-      }
+      this.shape.scale.set(coefficient / this.size);
     }
   }, {
     key: "move",

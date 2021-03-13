@@ -27,23 +27,19 @@ function () {
 
     this.shape = new PIXI.Graphics();
     this.shape.lineStyle(2, 0xffffff);
+    this.fire = new PIXI.Graphics();
+    this.fire.lineStyle(1.5, 0xffffff);
+    this.hideFire = true;
     this.shapePoint = new PIXI.Graphics();
     this.x = x || 0;
     this.y = y || 0;
     this.power = 5;
-    this.height = 46;
+    this.height = 52;
     this.width = 28;
     this.draw();
   }
 
   _createClass(Ship, [{
-    key: "resume",
-    value: function resume(x, y) {
-      this.shape.x = x;
-      this.shape.y = y;
-      this.shape.angle = 0;
-    }
-  }, {
     key: "rotate",
     value: function rotate(friction, vr) {
       if (friction < 0) {
@@ -78,15 +74,28 @@ function () {
       if (friction < 0) {
         window.cancelAnimationFrame(this.moveRAF);
         this.isMoving = false;
+        this.switchFire(true);
         return;
       }
 
       this.isMoving = true;
+      this.switchFire();
       this.think(width, height);
       this.countDirection();
       this.shape.x += this.vx;
       this.shape.y += this.vy;
       this.moveRAF = window.requestAnimationFrame(this.move.bind(this, friction - 1, v, width, height));
+    }
+  }, {
+    key: "switchFire",
+    value: function switchFire(hide) {
+      var value = hide || !this.hideFire;
+
+      if (value) {
+        this.shape.removeChild(this.fire);
+      } else {
+        this.shape.addChild(this.fire);
+      }
     }
   }, {
     key: "think",
@@ -119,6 +128,8 @@ function () {
       this.shape.pivot.set(this.width / 2, this.height / 2);
       this.shape.y = this.y;
       this.shape.x = this.x;
+      this.fire.drawPolygon([20, 37, 14, 52, 8, 37]);
+      this.fire.endFill();
       this.shapePoint.drawCircle(0, 0, 0);
       this.shapePoint.endFill();
       this.shapePoint.x = this.width / 2;

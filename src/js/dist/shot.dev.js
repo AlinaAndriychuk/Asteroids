@@ -45,7 +45,7 @@ function () {
     }
   }, {
     key: "countDirection",
-    value: function countDirection(friction) {
+    value: function countDirection() {
       var dx = this.x - this.centerX;
       var dy = this.y - this.centerY; // interaction
 
