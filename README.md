@@ -1,6 +1,7 @@
 # Asteroids
 
-Home page: [https://arteroidsarcade.netlify.app/]
+Home page
+[Link](https://arteroidsarcade.netlify.app/)
 
 #How to use
 
