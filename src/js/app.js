@@ -153,6 +153,9 @@ class Controls {
     if (event.code === 'ArrowRight' && !this.ship.isRotating) {
       this.ship.rotate(10, 4)
     }
+    if (event.code === 'ArrowDown' && !this.ship.isRotating) {
+      console.log(this.shots)
+    }
     if (event.code === 'Space' && !this.ship.isRotating) {
       const shot = new Shot(
         this.ship.shapePoint.getGlobalPosition().x, 
@@ -176,7 +179,12 @@ class Controls {
 
   defineAsteroid(asteroid, index) {
     if(asteroid.size === 3) {
-      this.removeAsteroid(asteroid, index);
+      this.removeGraphics(asteroid, this.asteroids);
+
+      if(this.asteroids.length < this.asteroidsLimit) {
+        this.addBigAsteroid();
+      }
+
       this.addScore(100);
     } else if (asteroid.size === 2) {
       this.splitAsteroid(asteroid, index);
@@ -184,15 +192,6 @@ class Controls {
     } else {
       this.splitAsteroid(asteroid, index);
       this.addScore(20);
-    }
-  }
-
-  removeAsteroid(asteroid, index) {
-    this.canvas.stage.removeChild(asteroid.shape);
-    this.asteroids.splice(index, 1);
-
-    if(this.asteroids.length < this.asteroidsLimit) {
-      this.addBigAsteroid();
     }
   }
 
@@ -248,8 +247,7 @@ class Controls {
       this.canvas.stage.addChild(stick.shape);
       this.sticks.push(stick);
 
-      const index = this.sticks.length - 1;
-      setTimeout(()=> this.removePoint(stick, index), 600)      
+      setTimeout(()=> this.removeGraphics(stick, this.sticks), 600)      
     }
   }
 
@@ -269,8 +267,7 @@ class Controls {
       this.canvas.stage.addChild(point.shape);
       this.points.push(point);
 
-      const index = this.points.length - 1;
-      setTimeout(()=> this.removePoint(point, index), 600)
+      setTimeout(()=> this.removeGraphics(point, this.points), 600)
     }
   }
 
@@ -279,17 +276,10 @@ class Controls {
     this.score.innerText = this.scoreNumber;
   }
 
-  removeShot(shot, index) {
-    this.canvas.stage.removeChild(shot.shape);
-    this.shots.splice(index, 1);
+  removeGraphics(elem, arr) {
+    this.canvas.stage.removeChild(elem.shape);
+    arr.splice(arr.indexOf(elem), 1);
   }
-
-  removePoint(point, index) {
-    this.canvas.stage.removeChild(point.shape);
-    this.points.splice(index, 1);
-  }
-
-  
 
   render() {
     window.requestAnimationFrame(this.render.bind(this));
@@ -302,18 +292,18 @@ class Controls {
       }
     });
 
-    this.shots.forEach( (shot, index) => {
+    this.shots.forEach( (shot) => {
       shot.move();
 
-      if(shot.visible(this.width, this.height)) {
-        this.removeShot(shot, index)
+      if(shot.hidden(this.width, this.height)) {
+        this.removeGraphics(shot, this.shots);
       }
 
       this.asteroids.forEach( (asteroid, indexOfAsteroid) => {
-        if (this.hitTestRectangle(asteroid.shape, shot.shape)) {
+        if (this.canvas.stage.children.includes(shot.shape) && this.hitTestRectangle(asteroid.shape, shot.shape)) {
           this.defineAsteroid(asteroid, indexOfAsteroid);
-          this.boom(asteroid.x, asteroid.y)
-          this.removeShot(shot, index);
+          this.boom(asteroid.x, asteroid.y);
+          this.canvas.stage.removeChild(shot.shape)
         }
       });
     });
@@ -381,7 +371,9 @@ class Controls {
       shot.scale(coefficient);
     })
 
-    this.ship.scale(coefficient)
+    if (this.ship) {
+      this.ship.scale(coefficient)
+    }
   }
 
   resize() {

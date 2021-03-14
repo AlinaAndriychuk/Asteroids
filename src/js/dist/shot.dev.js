@@ -61,8 +61,8 @@ function () {
       this.shape.scale.set(coefficient);
     }
   }, {
-    key: "visible",
-    value: function visible(width, height) {
+    key: "hidden",
+    value: function hidden(width, height) {
       var x = this.shape.x;
       var y = this.shape.y;
 

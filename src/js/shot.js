@@ -39,7 +39,7 @@ export default class Shot {
     this.shape.scale.set(coefficient);
   }
 
-  visible(width, height) {
+  hidden(width, height) {
     const {x} = this.shape;
     const {y} = this.shape
     if (x > width || x + this.radius < 0 || y > height || y + this.radius < 0) {

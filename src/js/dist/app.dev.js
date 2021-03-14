@@ -183,6 +183,10 @@ function () {
         this.ship.rotate(10, 4);
       }
 
+      if (event.code === 'ArrowDown' && !this.ship.isRotating) {
+        console.log(this.shots);
+      }
+
       if (event.code === 'Space' && !this.ship.isRotating) {
         var shot = new _shot["default"](this.ship.shapePoint.getGlobalPosition().x, this.ship.shapePoint.getGlobalPosition().y, this.ship.shape.x, this.ship.shape.y);
         this.canvas.stage.addChild(shot.shape);
@@ -202,7 +206,12 @@ function () {
     key: "defineAsteroid",
     value: function defineAsteroid(asteroid, index) {
       if (asteroid.size === 3) {
-        this.removeAsteroid(asteroid, index);
+        this.removeGraphics(asteroid, this.asteroids);
+
+        if (this.asteroids.length < this.asteroidsLimit) {
+          this.addBigAsteroid();
+        }
+
         this.addScore(100);
       } else if (asteroid.size === 2) {
         this.splitAsteroid(asteroid, index);
@@ -210,16 +219,6 @@ function () {
       } else {
         this.splitAsteroid(asteroid, index);
         this.addScore(20);
-      }
-    }
-  }, {
-    key: "removeAsteroid",
-    value: function removeAsteroid(asteroid, index) {
-      this.canvas.stage.removeChild(asteroid.shape);
-      this.asteroids.splice(index, 1);
-
-      if (this.asteroids.length < this.asteroidsLimit) {
-        this.addBigAsteroid();
       }
     }
   }, {
@@ -255,9 +254,8 @@ function () {
 
         _this2.sticks.push(stick);
 
-        var index = _this2.sticks.length - 1;
         setTimeout(function () {
-          return _this2.removePoint(stick, index);
+          return _this2.removeGraphics(stick, _this2.sticks);
         }, 600);
       };
 
@@ -280,9 +278,8 @@ function () {
 
         _this3.points.push(point);
 
-        var index = _this3.points.length - 1;
         setTimeout(function () {
-          return _this3.removePoint(point, index);
+          return _this3.removeGraphics(point, _this3.points);
         }, 600);
       };
 
@@ -297,16 +294,10 @@ function () {
       this.score.innerText = this.scoreNumber;
     }
   }, {
-    key: "removeShot",
-    value: function removeShot(shot, index) {
-      this.canvas.stage.removeChild(shot.shape);
-      this.shots.splice(index, 1);
-    }
-  }, {
-    key: "removePoint",
-    value: function removePoint(point, index) {
-      this.canvas.stage.removeChild(point.shape);
-      this.points.splice(index, 1);
+    key: "removeGraphics",
+    value: function removeGraphics(elem, arr) {
+      this.canvas.stage.removeChild(elem.shape);
+      arr.splice(arr.indexOf(elem), 1);
     }
   }, {
     key: "render",
@@ -322,20 +313,20 @@ function () {
           _this4.shipCollision(asteroid, index);
         }
       });
-      this.shots.forEach(function (shot, index) {
+      this.shots.forEach(function (shot) {
         shot.move();
 
-        if (shot.visible(_this4.width, _this4.height)) {
-          _this4.removeShot(shot, index);
+        if (shot.hidden(_this4.width, _this4.height)) {
+          _this4.removeGraphics(shot, _this4.shots);
         }
 
         _this4.asteroids.forEach(function (asteroid, indexOfAsteroid) {
-          if (_this4.hitTestRectangle(asteroid.shape, shot.shape)) {
+          if (_this4.canvas.stage.children.includes(shot.shape) && _this4.hitTestRectangle(asteroid.shape, shot.shape)) {
             _this4.defineAsteroid(asteroid, indexOfAsteroid);
 
             _this4.boom(asteroid.x, asteroid.y);
 
-            _this4.removeShot(shot, index);
+            _this4.canvas.stage.removeChild(shot.shape);
           }
         });
       });
@@ -397,7 +388,10 @@ function () {
       this.shots.forEach(function (shot) {
         shot.scale(coefficient);
       });
-      this.ship.scale(coefficient);
+
+      if (this.ship) {
+        this.ship.scale(coefficient);
+      }
     }
   }, {
     key: "resize",
